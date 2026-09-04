@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#faf8f3">
-<title>Hebrew Ktav Yad Practice</title>
+<title>Hebrew Letter Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;600&display=swap" rel="stylesheet">
 <style>
 @font-face {
   font-family: "DanaYad";
@@ -20,6 +23,9 @@
   --soft:#f1edff;
   --line:#ddd8e8;
   --guide:#d9d8df;
+  --scriptFont:"DanaYad","Times New Roman",serif;
+  --blockFont:"Noto Serif Hebrew","Frank Ruhl Libre","Times New Roman",serif;
+  --letterFont:var(--scriptFont);
 }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html,body { margin:0; width:100%; height:100%; overflow:hidden; }
@@ -34,15 +40,23 @@ button { font:inherit; border:0; }
   display:flex; flex-direction:column;
   padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
 }
+.app.block-mode { --letterFont:var(--blockFont); }
 header {
-  height:64px; flex:none; display:flex; align-items:center;
-  justify-content:space-between; border-bottom:1px solid #e7e3dc;
+  height:64px; flex:none; display:grid; grid-template-columns:48px 1fr auto;
+  align-items:center; gap:8px; border-bottom:1px solid #e7e3dc;
 }
-.logo { font-size:21px; font-weight:650; letter-spacing:-.5px; }
+.logo { font-size:21px; font-weight:650; letter-spacing:-.5px; text-align:center; }
 .icon {
   width:48px;height:48px;border-radius:16px;background:transparent;
   font-size:27px;color:var(--ink); display:grid;place-items:center;
 }
+.modeSwitch { display:flex; background:var(--soft); border-radius:14px; padding:3px; gap:2px; }
+.modeBtn {
+  padding:8px 11px; border-radius:11px; background:transparent;
+  color:var(--ink2); font-size:13px; font-weight:650;
+}
+.modeBtn.active { background:var(--ink); color:#fff; }
+.modeBtn:active { transform:scale(.96); }
 .screen { flex:1; min-height:0; display:none; flex-direction:column; }
 .screen.active { display:flex; }
 #menuScreen { overflow:auto; padding:22px 4px 24px; }
@@ -59,7 +73,7 @@ h1 { margin:8px 0 4px; font-size:31px; letter-spacing:-1px; }
   align-items:center; justify-content:center; gap:3px;
 }
 .letterBtn:active { transform:scale(.96); background:var(--soft); }
-.glyph { font-family:"DanaYad","Times New Roman",serif; font-size:43px; line-height:1; }
+.glyph { font-family:var(--letterFont); font-size:43px; line-height:1; }
 .name { font-size:11px; color:#8a8491; direction:ltr; }
 .practiceHead {
   display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
@@ -69,7 +83,7 @@ h1 { margin:8px 0 4px; font-size:31px; letter-spacing:-1px; }
 .current { text-align:center; }
 .current .bigName { font-size:16px;color:var(--ink2); }
 .current .bigLetter {
-  font-family:"DanaYad","Times New Roman",serif; font-size:66px;
+  font-family:var(--letterFont); font-size:66px;
   line-height:.8; color:var(--ink); display:block;
 }
 .clear { justify-self:end; padding:11px 15px; border:1px solid var(--line);
@@ -84,7 +98,7 @@ h1 { margin:8px 0 4px; font-size:31px; letter-spacing:-1px; }
   pointer-events:none;
 }
 .guideLetter {
-  font-family:"DanaYad","Times New Roman",serif;
+  font-family:var(--letterFont);
   font-size:min(70vw,58vh,390px); color:var(--guide);
   line-height:1; user-select:none;
 }
@@ -114,11 +128,14 @@ canvas { position:absolute; inset:0; width:100%; height:100%; touch-action:none;
 </style>
 </head>
 <body>
-<div class="app">
+<div class="app" id="app">
 <header>
   <button class="icon" id="menuBtn" aria-label="Menu">☰</button>
-  <div class="logo">Hebrew Ktav Yad</div>
-  <div style="width:48px"></div>
+  <div class="logo">Hebrew Letters</div>
+  <div class="modeSwitch" id="modeSwitch">
+    <button class="modeBtn active" data-mode="script">כתב</button>
+    <button class="modeBtn" data-mode="block">דפוס</button>
+  </div>
 </header>
 
 <section class="screen active" id="menuScreen">
@@ -161,6 +178,7 @@ const letters = [
 ];
 
 let index = 0;
+const appEl = document.getElementById("app");
 const menuScreen = document.getElementById("menuScreen");
 const practiceScreen = document.getElementById("practiceScreen");
 const lettersEl = document.getElementById("letters");
@@ -191,6 +209,14 @@ letters.forEach(([char,name],i)=>{
   b.innerHTML=`<span class="glyph">${char}</span><span class="name">${name}</span>`;
   b.onclick=()=>showPractice(i);
   lettersEl.appendChild(b);
+});
+
+// Script / block letter mode toggle
+document.querySelectorAll(".modeBtn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".modeBtn").forEach(b=>b.classList.toggle("active", b===btn));
+    appEl.classList.toggle("block-mode", btn.dataset.mode==="block");
+  };
 });
 
 function resizeCanvas() {
